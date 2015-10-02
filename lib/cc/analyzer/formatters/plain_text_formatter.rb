@@ -40,7 +40,13 @@ module CC
               end
 
               print(issue["description"])
+
+              if issue["confidence"]
+                report(issue["confidence"])
+              end
+
               print(colorize(" [#{issue["engine_name"]}]", "#333333"))
+
               puts
             end
             puts
@@ -67,6 +73,19 @@ module CC
         end
 
         private
+
+        def report(confidence)
+          colors_map = {
+            "weak" => "#905E3B",
+            "medium" => "#1a0dab",
+            "high" => "#FF4500",
+          }
+
+          color = colors_map[confidence] || "#333333"
+
+          print " with confidence: "
+          print(colorize("#{confidence}", color))
+        end
 
         def spinner(text = nil)
           @spinner ||= Spinner.new(text)
