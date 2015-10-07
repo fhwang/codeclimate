@@ -7,6 +7,12 @@ module CC
     module Formatters
       class PlainTextFormatter < Formatter
 
+        SEVERITY_COLORS = {
+            "info" => "#905E3B",
+            "normal" => "#1a0dab",
+            "critical" => "#FF4500",
+          }.freeze
+
         def started
           puts colorize("Starting analysis", :green)
         end
@@ -41,8 +47,8 @@ module CC
 
               print(issue["description"])
 
-              if issue["confidence"]
-                report(issue["confidence"])
+              if issue["severity"]
+                report(issue["severity"])
               end
 
               print(colorize(" [#{issue["engine_name"]}]", "#333333"))
@@ -74,17 +80,9 @@ module CC
 
         private
 
-        def report(confidence)
-          colors_map = {
-            "weak" => "#905E3B",
-            "medium" => "#1a0dab",
-            "high" => "#FF4500",
-          }
-
-          color = colors_map[confidence] || "#333333"
-
-          print " with confidence: "
-          print(colorize("#{confidence}", color))
+        def report(severity)
+          color = SEVERITY_COLORS[severity] || "#333333"
+          print ", " + colorize("severity: #{severity}", color)
         end
 
         def spinner(text = nil)
