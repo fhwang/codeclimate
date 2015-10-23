@@ -40,6 +40,10 @@ module CC
         container.run(container_options)
       end
 
+      def container_name
+        @container_name ||= "cc-engines-#{name}-#{SecureRandom.uuid}"
+      end
+
       private
 
       def container_options
@@ -53,10 +57,6 @@ module CC
           "--volume", "#{config_file}:/config.json:ro",
           "--user", "9000:9000",
         ]
-      end
-
-      def container_name
-        @container_name ||= "cc-engines-#{name}-#{SecureRandom.uuid}"
       end
 
       def config_file
