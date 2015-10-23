@@ -49,6 +49,7 @@ module CC
         t_timeout = timeout_thread
 
         _, status = Process.waitpid2(pid)
+        Analyzer.logger.warn("run 5")
         if @timed_out
         Analyzer.logger.warn("run 6")
           @listener.timed_out(container_data(duration: @timeout))
@@ -58,6 +59,7 @@ module CC
           @listener.finished(container_data(duration: duration, status: status))
         end
       ensure
+        Analyzer.logger.warn("run 8 #{$!.inspect}")
         t_timeout.kill if t_timeout
         if @timed_out
           t_out.kill if t_out
