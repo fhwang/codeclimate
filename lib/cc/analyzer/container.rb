@@ -50,9 +50,11 @@ module CC
 
         _, status = Process.waitpid2(pid)
         if @timed_out
+        Analyzer.logger.warn("run 6")
           @listener.timed_out(container_data(duration: @timeout))
         else
           duration = ((Time.now - started) * 1000).round
+          Analyzer.logger.warn("run 7 #{container_data(duration: duration, status: status).inspect}")
           @listener.finished(container_data(duration: duration, status: status))
         end
       ensure
