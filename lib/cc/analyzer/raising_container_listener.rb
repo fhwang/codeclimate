@@ -15,6 +15,7 @@ module CC
       end
 
       def finished(data)
+        Analyzer.logger.warn("RaisingContainerListener#finished 0 #{data.status.success?}")
         unless data.status.success?
           message = "engine #{engine_name} failed"
           message << " with status #{data.status.exitstatus}"
