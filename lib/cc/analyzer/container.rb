@@ -49,17 +49,13 @@ module CC
         t_timeout = timeout_thread
 
         _, status = Process.waitpid2(pid)
-        Analyzer.logger.warn("Analyzer::Container#run 5")
         if @timed_out
-        Analyzer.logger.warn("Analyzer::Container#run 6")
           @listener.timed_out(container_data(duration: @timeout))
         else
           duration = ((Time.now - started) * 1000).round
-          Analyzer.logger.warn("Analyzer::Container#run 7 #{container_data(duration: duration, status: status).inspect}")
           @listener.finished(container_data(duration: duration, status: status))
         end
       ensure
-        Analyzer.logger.warn("Analyzer::Container#run 8 #{$!.inspect}")
         t_timeout.kill if t_timeout
         if @timed_out
           t_out.kill if t_out
