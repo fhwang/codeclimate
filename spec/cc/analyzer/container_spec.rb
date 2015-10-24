@@ -73,7 +73,8 @@ module CC::Analyzer
         err.puts("error one")
         err.puts("error two")
         err.rewind
-        stub_spawn(status: :failed, err: err)
+        status = stub("Process::Status", exitstatus: 123)
+        stub_spawn(status: status, err: err)
 
         container.run
 
@@ -82,7 +83,15 @@ module CC::Analyzer
         listener.finished_stderr.must_equal "error one\nerror two\n"
       end
 
-      it "returns a result object: timed_out? false, exitstatus 0, finished_self? true, duration: DURATION"
+      it "returns a result object" do
+        container = Container.new(image: "codeclimate/foo", name: "name")
+        stub_spawn
+        result = container.run
+        result.exitstatus.must_equal 0
+        result.timed_out?.must_equal false
+        (result.duration >= 0).must_equal true
+        (result.duration < 1).must_equal true
+      end
 
       # N.B. these specs actually docker-runs things. This logic is critical and
       # so the real-world interaction is valuable.
@@ -167,6 +176,7 @@ module CC::Analyzer
 
     def stub_spawn(status: nil, out: StringIO.new, err: StringIO.new)
       pid = 42
+      status ||= stub("Process::Status", exitstatus: 0)
 
       POSIX::Spawn.stubs(:popen4).returns([pid, nil, out, err])
       Process.stubs(:waitpid2).with(pid).returns([nil, status])
@@ -176,6 +186,7 @@ module CC::Analyzer
 
     def expect_spawn(args, status: nil, out: StringIO.new, err: StringIO.new)
       pid = 42
+      status ||= stub("Process::Status", exitstatus: 0)
 
       POSIX::Spawn.expects(:popen4).with(*args).returns([pid, nil, out, err])
       Process.expects(:waitpid2).with(pid).returns([nil, status])

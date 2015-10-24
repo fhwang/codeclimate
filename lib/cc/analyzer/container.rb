@@ -51,9 +51,11 @@ module CC
         _, status = Process.waitpid2(pid)
         if @timed_out
           @listener.timed_out(container_data(duration: @timeout))
+          Result.new(status.exitstatus, true, @timeout)
         else
           duration = ((Time.now - started) * 1000).round
           @listener.finished(container_data(duration: duration, status: status))
+          Result.new(status.exitstatus, false, duration)
         end
       ensure
         t_timeout.kill if t_timeout
@@ -65,6 +67,8 @@ module CC
           t_err.join if t_err
         end
       end
+
+      Result = Struct.new(:exitstatus, :timed_out?, :duration)
 
       def stop
         # Prevents the processing of more output after first error
