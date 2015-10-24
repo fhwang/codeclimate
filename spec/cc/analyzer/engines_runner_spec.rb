@@ -85,9 +85,13 @@ module CC::Analyzer
     end
 
     def expect_engine_run(name, source_dir, formatter, engine_config = nil)
+      container_result = stub(
+        "Container::Result", timed_out?: false, exitstatus: 0, stderr: ""
+      )
       engine = stub(name: name)
       engine.expects(:run).
-        with(formatter, kind_of(ContainerListener))
+        with(formatter, kind_of(ContainerListener)).
+        returns(container_result)
 
       image = "codeclimate/codeclimate-#{name}"
       engine_config ||= {
