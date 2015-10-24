@@ -91,6 +91,7 @@ module CC::Analyzer
         result.timed_out?.must_equal false
         (result.duration >= 0).must_equal true
         (result.duration < 1).must_equal true
+        result.stderr.must_equal ""
       end
 
       # N.B. these specs actually docker-runs things. This logic is critical and
@@ -165,7 +166,24 @@ module CC::Analyzer
     end
 
     describe "#run when the process exits with a non-zero status" do
-      it "returns a result object: timed_out? false, exitstatus ???, finished_self? true, stderr: STDERR"
+      before do
+        @container = Container.new(image: "codeclimate/foo", name: "name")
+        err = StringIO.new
+        err.puts("error one")
+        err.puts("error two")
+        err.rewind
+        status = stub("Process::Status", exitstatus: 123)
+        stub_spawn(status: status, err: err)
+      end
+
+      it "returns a result object" do
+        result = @container.run
+        result.exitstatus.must_equal 123
+        result.timed_out?.must_equal false
+        (result.duration >= 0).must_equal true
+        (result.duration < 1).must_equal true
+        result.stderr.must_equal "error one\nerror two\n"
+      end
     end
 
     describe "new with a blank image" do
