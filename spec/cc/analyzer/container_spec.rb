@@ -82,6 +82,8 @@ module CC::Analyzer
         listener.finished_stderr.must_equal "error one\nerror two\n"
       end
 
+      it "returns a result object: timed_out? false, exitstatus 0, finished_self? true, duration: DURATION"
+
       # N.B. these specs actually docker-runs things. This logic is critical and
       # so the real-world interaction is valuable.
       describe "stopping containers" do
@@ -111,6 +113,7 @@ module CC::Analyzer
           assert_container_stopped
           listener.finished_image.must_equal "alpine"
           listener.finished_name.must_equal @name
+          puts "***** container result: timed_out? false, exitstatus: ???, finished_self? false"
         end
 
         it "times out slow containers" do
@@ -131,6 +134,7 @@ module CC::Analyzer
           listener.timed_out_image.must_equal "alpine"
           listener.timed_out_name.must_equal @name
           listener.timed_out_seconds.must_equal 1
+          puts "***** container result: timed_out? true, exitstatus: ???, finished_self? false"
         end
 
         def run_container(container)
@@ -149,6 +153,10 @@ module CC::Analyzer
           `docker ps --quiet --filter name=#{@name}`.strip.must_equal ""
         end
       end
+    end
+
+    describe "#run when the process exits with a non-zero status" do
+      it "returns a result object: timed_out? false, exitstatus ???, finished_self? true, stderr: STDERR"
     end
 
     describe "new with a blank image" do

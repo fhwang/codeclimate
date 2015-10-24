@@ -43,7 +43,17 @@ module CC
 
       def run_engine(engine, container_listener)
         @formatter.engine_running(engine) do
-          engine.run(@formatter, container_listener)
+          container_result = engine.run(@formatter, container_listener)
+          if container_result.timed_out?
+            message = "engine #{engine.name} ran for #{container_result.duration} seconds"
+            message << " and was killed"
+            raise Engine::EngineTimeout, message
+          elsif container_result.exitstatus != 0
+            message = "engine #{engine.name} failed"
+            message << " with status #{container_result.exitstatus}"
+            message << " and stderr \n#{container_result.stderr}"
+            raise Engine::EngineFailure, message
+          end
         end
       end
     end

@@ -55,31 +55,20 @@ module CC::Analyzer
       let(:registry) { registry_with_engine("bad_engine") }
 
       before do
-        listener = stub("CompositeContainerListener")
-        CompositeContainerListener.stubs(:new).with do |*listeners|
-          @raiser = listeners.detect do |l|
-            l.class == RaisingContainerListener
-          end
-        end.returns(listener)
-        container = stub("Container")
+        container_result = stub(
+          "Container::Result",
+          timed_out?: false,
+          exitstatus: 123,
+          stderr: "Oopsie"
+        )
+        container = stub("Container", run: container_result)
         container.stubs(:on_output).yields
-        container.stubs(:run).with do
-          data = Container::ContainerData.new(
-            image_name,
-            container_name,
-            10,
-            mock("Process::Status", success?: false, exitstatus: 123),
-            "Oopsie"
-          )
-          @raiser.finished(data)
-          true
-        end
         Container.stubs(:new).returns(container)
       end
 
       it "raises EngineFailure for the CLI" do
         runner = EnginesRunner.new(registry, formatter, "/code", config)
-        -> { runner.run }.must_raise(Engine::EngineFailure, "")
+        -> { runner.run }.must_raise(Engine::EngineFailure)
       end
     end
 
