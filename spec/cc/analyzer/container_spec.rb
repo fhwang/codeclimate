@@ -123,7 +123,11 @@ module CC::Analyzer
           assert_container_stopped
           listener.finished_image.must_equal "alpine"
           listener.finished_name.must_equal @name
-          puts "***** container result: timed_out? false, exitstatus: ???, finished_self? false"
+          @container_result.exitstatus.must_equal 137
+          @container_result.timed_out?.must_equal false
+          (@container_result.duration >= 0).must_equal true
+          (@container_result.duration < 2_000).must_equal true
+          @container_result.stderr.must_equal ""
         end
 
         it "times out slow containers" do
@@ -144,11 +148,15 @@ module CC::Analyzer
           listener.timed_out_image.must_equal "alpine"
           listener.timed_out_name.must_equal @name
           listener.timed_out_seconds.must_equal 1
-          puts "***** container result: timed_out? true, exitstatus: ???, finished_self? false"
+          @container_result.exitstatus.must_equal 137
+          @container_result.timed_out?.must_equal true
+          (@container_result.duration >= 0).must_equal true
+          (@container_result.duration < 2_000).must_equal true
+          @container_result.stderr.must_equal ""
         end
 
         def run_container(container)
-          thread = Thread.new { container.run }
+          thread = Thread.new { @container_result = container.run }
 
           if block_given?
             yield container
