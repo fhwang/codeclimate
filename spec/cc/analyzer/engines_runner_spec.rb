@@ -47,6 +47,42 @@ module CC::Analyzer
       end
     end
 
+    describe "when an engine container exits with non-zero status" do
+      let(:config) { config_with_engine("bad_engine") }
+      let(:container_name) { "cc-engines-123-asdf" }
+      let(:formatter) { null_formatter }
+      let(:image_name) { "codeclimate/bad-engine:b52" }
+      let(:registry) { registry_with_engine("bad_engine") }
+
+      before do
+        listener = stub("CompositeContainerListener")
+        CompositeContainerListener.stubs(:new).with do |*listeners|
+          @raiser = listeners.detect do |l|
+            l.class == RaisingContainerListener
+          end
+        end.returns(listener)
+        container = stub("Container")
+        container.stubs(:on_output).yields
+        container.stubs(:run).with do
+          data = Container::ContainerData.new(
+            image_name,
+            container_name,
+            10,
+            mock("Process::Status", success?: false, exitstatus: 123),
+            "Oopsie"
+          )
+          @raiser.finished(data)
+          true
+        end
+        Container.stubs(:new).returns(container)
+      end
+
+      it "raises EngineFailure for the CLI" do
+        runner = EnginesRunner.new(registry, formatter, "/code", config)
+        -> { runner.run }.must_raise(Engine::EngineFailure, "")
+      end
+    end
+
     def registry_with_engine(name)
       { name => { "image" => "codeclimate/codeclimate-#{name}" } }
     end
